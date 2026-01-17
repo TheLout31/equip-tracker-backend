@@ -5,7 +5,32 @@ const EquipmentModel = require("../models/equipment.model");
  */
 exports.getAllEquipment = async (req, res) => {
   try {
-    const equipment = await EquipmentModel.find().sort({ createdAt: -1 });
+    const {
+      search,
+      status,
+      type,
+      sortBy = "createdAt",
+      order = "desc",
+    } = req.query;
+    const filter = {};
+    let sort = null;
+    if (status) {
+      filter.status = status;
+    }
+    if (type) {
+      filter.type = type;
+    }
+    if (sortBy) {
+      sort = sortBy;
+    }
+
+    if (search) {
+      filter.name = { $regex: search, $options: "i" };
+    }
+
+    const equipment = await EquipmentModel.find(filter).sort({
+      [sort]: order == "asc" ? 1 : -1,
+    });
     res.status(200).json(equipment);
   } catch (error) {
     res.status(500).json({ message: error.message });
